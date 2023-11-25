@@ -1,0 +1,1 @@
+Application de saisi ou de scan de codes barres de produits. L'application affiche des informations concernant la typologie diététique (light, moyen ou pas light) avec une alternative si existante. # P3PM

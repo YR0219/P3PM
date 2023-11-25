@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <title>Recherche de produits</title>
+</head>
+<body>
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="display: block; margin: 0 auto; width: 150px; height: auto;">
+    <h1>Recherche de produits alimentaires</h1>
+    <img src="{{ url_for('static', filename='aliments.jpg') }}" alt="Aliments" style="display: block; margin: 0 auto; width: 300px; height: auto;">
+    <form method="POST" action="/">
+        <button type="button" id="scan-button">Scanner un code-barres</button>
+        <div id="scanner-container" style="display:none;">
+            <video playsinline></video>
+        </div>
+        <label for="code">Veuillez saisir le code barre de votre produit :</label>
+        <input type="text" name="code" id="code" required>
+        <button type="submit">Valider</button>
+    </form>
+    {% if result %}
+        <div class="result">
+            <h2>Produit saisi</h2>
+            {% if result.not_found %}
+                <p>Code non trouvé dans la base de données.</p>
+            {% else %}
+                <p>Code : {{ result.code }}</p>
+                <p>Nom du produit : {{ result.product_name }}</p>
+                <p>Catégorie principale : {{ result.main_category_fr }}</p>
+                <p>Energie pour 100g (kJ) : {{ result.energy_100g }}</p>
+                <p>Matières grasses pour 100g (g) : {{ result.fat_100g }}</p>
+                <p>Matières grasses saturées pour 100g (g) : {{ result.saturated_fat_100g }}</p>
+                <p>Glucides pour 100g (g) : {{ result.carbohydrates_100g }}</p>
+                <p>Sucres pour 100g (g) : {{ result.sugars_100g }}</p>
+                <p>Protéines pour 100g (g) : {{ result.proteins_100g }}</p>
+                <p class="main-category">Groupe light : {{ result.light_group }}</p>
+
+                {% if alternative_product is not none and not alternative_product.empty %}
+                    <h2>Produit alternatif Light ou Moyen</h2>
+                    <p>Code : {{ alternative_product.code.iloc[0] }}</p>
+                    <p>Nom du produit : {{ alternative_product.product_name.iloc[0] }}</p>
+                    <p>Energie pour 100g (kJ) : {{ alternative_product.energy_100g.iloc[0] }}</p>
+                    <p>Matières grasses pour 100g (g) : {{ alternative_product.fat_100g.iloc[0] }}</p>
+                    <p>Glucides pour 100g (g) : {{ alternative_product.carbohydrates_100g.iloc[0] }}</p>
+                    <p>Protéines pour 100g (g) : {{ alternative_product.proteins_100g.iloc[0] }}</p>
+                    <p class="main-category">URL : <a href="{{ alternative_product.url.iloc[0] }}" target="_blank">{{ alternative_product.url.iloc[0] }}</a></p>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+
+<script>
+document.getElementById("scan-button").addEventListener("click", function() {
+  document.getElementById("scanner-container").style.display = "block";
+  initQuagga();
+});
+
+function initQuagga() {
+  Quagga.init({
+    inputStream: {
+      name: "Live",
+      type: "LiveStream",
+      target: document.querySelector("#scanner-container"),
+      constraints: {
+        facingMode: "environment"
+      }
+    },
+    decoder: {
+      readers: ["ean_reader"]
+    }
+  }, function (err) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    Quagga.start();
+  });
+
+  Quagga.onDetected(function (data) {
+    var code = data.codeResult.code;
+    document.getElementById("code").value = code;
+    document.querySelector("form").submit();
+  });
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+
+</body>
+</html>
